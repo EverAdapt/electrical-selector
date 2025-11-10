@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Simple house floorplan for testing -->
+  
+  <!-- Exterior walls -->
+  <rect x="50" y="50" width="700" height="500" fill="none" stroke="#333" stroke-width="4"/>
+  
+  <!-- Interior walls -->
+  <!-- Vertical wall 1 -->
+  <line x1="300" y1="50" x2="300" y2="550" stroke="#333" stroke-width="4"/>
+  
+  <!-- Vertical wall 2 -->
+  <line x1="550" y1="50" x2="550" y2="300" stroke="#333" stroke-width="4"/>
+  
+  <!-- Horizontal wall 1 -->
+  <line x1="50" y1="300" x2="750" y2="300" stroke="#333" stroke-width="4"/>
+  
+  <!-- Room labels -->
+  <text x="175" y="170" font-size="24" fill="#666" text-anchor="middle">Living Room</text>
+  <text x="425" y="170" font-size="24" fill="#666" text-anchor="middle">Kitchen</text>
+  <text x="650" y="170" font-size="24" fill="#666" text-anchor="middle">Bath</text>
+  <text x="175" y="420" font-size="24" fill="#666" text-anchor="middle">Bedroom 1</text>
+  <text x="525" y="420" font-size="24" fill="#666" text-anchor="middle">Bedroom 2</text>
+  
+  <!-- Doors (indicated by arcs) -->
+  <path d="M 300 250 Q 320 250, 320 270" fill="none" stroke="#999" stroke-width="2"/>
+  <path d="M 550 250 Q 570 250, 570 270" fill="none" stroke="#999" stroke-width="2"/>
+  
+  <!-- Windows (indicated by parallel lines) -->
+  <g stroke="#999" stroke-width="2">
+    <line x1="100" y1="50" x2="200" y2="50"/>
+    <line x1="100" y1="48" x2="200" y2="48"/>
+    
+    <line x1="600" y1="50" x2="700" y2="50"/>
+    <line x1="600" y1="48" x2="700" y2="48"/>
+    
+    <line x1="50" y1="400" x2="50" y2="500"/>
+    <line x1="48" y1="400" x2="48" y2="500"/>
+  </g>
+  
+  <!-- Grid pattern for reference -->
+  <defs>
+    <pattern id="smallGrid" width="50" height="50" patternUnits="userSpaceOnUse">
+      <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#eee" stroke-width="0.5"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="600" fill="url(#smallGrid)" opacity="0.3"/>
+</svg>

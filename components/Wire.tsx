@@ -22,11 +22,16 @@ export function Wire({ edge, nodes }: WireProps) {
     return null;
   }
 
-  // Check if this is a light-switch connection
+  // Check if this is a light-switch connection OR light-light connection
   const isLightSwitch = 
     (sourceNode.kind === 'light' && targetNode.kind === 'switch') ||
     (sourceNode.kind === 'switch' && targetNode.kind === 'light');
   
+  const isLightLight = 
+    (sourceNode.kind === 'light' && targetNode.kind === 'light');
+  
+  // Use curved lines for light-switch and light-light connections
+  const isCurved = isLightSwitch || isLightLight;
 
   // Calculate control point for curve
   const midX = (sourceNode.position.x + targetNode.position.x) / 2;
@@ -49,7 +54,7 @@ export function Wire({ edge, nodes }: WireProps) {
 
   // Calculate path
   let path: string;
-  if (isLightSwitch) {
+  if (isCurved) {
     // Quadratic Bezier curve with control point
     path = `M ${sourceNode.position.x},${sourceNode.position.y} Q ${cx},${cy} ${targetNode.position.x},${targetNode.position.y}`;
   } else {
@@ -112,31 +117,31 @@ export function Wire({ edge, nodes }: WireProps) {
       />
       
       {/* Background white stroke for contrast */}
-      {isLightSwitch && (
+      {isCurved && (
         <path
           d={path}
           stroke="#ffffff"
-          strokeWidth={6}
+          strokeWidth={4}
           fill="none"
-          strokeDasharray="10 8"
-          opacity={0.9}
+          strokeDasharray="8 6"
+          opacity={0.8}
           style={{ pointerEvents: 'none' }}
         />
       )}
       
-      {/* Visible wire - MUCH more prominent */}
+      {/* Visible wire */}
       <path
         d={path}
-        stroke={isLightSwitch ? "#3b82f6" : "#666"}
-        strokeWidth={isLightSwitch ? 5 : 1.5}
+        stroke={isCurved ? "#3b82f6" : "#666"}
+        strokeWidth={2}
         fill="none"
-        strokeDasharray={isLightSwitch ? "10 8" : "4 2"}
-        opacity={isLightSwitch ? 1 : 0.6}
+        strokeDasharray={isCurved ? "8 6" : "4 2"}
+        opacity={isCurved ? 1 : 0.6}
         style={{ pointerEvents: 'none' }}
       />
 
-      {/* Control point handle (only for light-switch and when hovering/dragging) */}
-      {isLightSwitch && (isHovering || isDragging) && (
+      {/* Control point handle (only for curved lines and when hovering/dragging) */}
+      {isCurved && (isHovering || isDragging) && (
         <>
           {/* Line from control point to path (visual guide) */}
           {isDragging && (

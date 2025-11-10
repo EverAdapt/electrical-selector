@@ -2,8 +2,7 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { Editor } from '@/components/Editor';
-import { DevicePalette } from '@/components/DevicePalette';
-import { PropertyPanel } from '@/components/PropertyPanel';
+import { Legend } from '@/components/Legend';
 import { WelcomeGuide } from '@/components/WelcomeGuide';
 import { useFloorplanStore } from '@/lib/store';
 import { exportAsPNG, exportAsPDF, downloadJSON, loadJSONFile, loadImageFile } from '@/lib/export';
@@ -118,6 +117,11 @@ export default function Home() {
     downloadJSON(json, `${name}.json`);
   };
 
+  // Auto-load sample for dev/testing
+  useEffect(() => {
+    handleLoadSample();
+  }, []);
+  
   // Show welcome guide on first visit
   useEffect(() => {
     const hasVisited = localStorage.getItem('hasVisitedElectricalOverlay');
@@ -147,71 +151,61 @@ export default function Home() {
     <>
       {showWelcome && <WelcomeGuide onClose={() => setShowWelcome(false)} />}
       
-      <div className="flex flex-col h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+      <div className="flex flex-col h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 font-inter">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-lg border-b border-gray-200/50 px-8 py-5 shadow-sm">
+      <header className="bg-gray-900/90 backdrop-blur-lg border-b border-gray-700/50 px-8 py-4 shadow-2xl">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg ring-2 ring-blue-400/20">
               <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold text-white tracking-tight">
                 Electrical Floorplan Overlay
               </h1>
-              <p className="text-sm text-gray-600 mt-0.5">Professional electrical markup made simple</p>
+              <p className="text-sm text-gray-400 mt-0.5 font-medium">Professional electrical markup made simple</p>
             </div>
           </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
             <button
               onClick={undo}
-              className="p-2.5 hover:bg-blue-50 rounded-lg transition-all hover:shadow-sm"
+              className="h-10 px-3 hover:bg-gray-800 rounded-xl transition-all border border-gray-700 hover:border-gray-600 flex items-center justify-center"
               title="Undo (Ctrl+Z)"
             >
-              <Undo2 size={20} className="text-gray-700" />
+              <Undo2 size={18} className="text-gray-300" />
             </button>
             <button
               onClick={redo}
-              className="p-2.5 hover:bg-blue-50 rounded-lg transition-all hover:shadow-sm"
+              className="h-10 px-3 hover:bg-gray-800 rounded-xl transition-all border border-gray-700 hover:border-gray-600 flex items-center justify-center"
               title="Redo (Ctrl+Y)"
             >
-              <Redo2 size={20} className="text-gray-700" />
+              <Redo2 size={18} className="text-gray-300" />
             </button>
             
-            <div className="w-px h-8 bg-gray-300" />
-            
-            <button
-              onClick={handleLoadSample}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg font-medium"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-              <span className="text-sm">Try Sample</span>
-            </button>
+            <div className="w-px h-8 bg-gray-700 mx-1" />
             
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-300 hover:border-blue-500 rounded-lg transition-all shadow-sm hover:shadow-md"
+              className="h-10 flex items-center gap-2 px-4 bg-gray-800 border border-gray-700 hover:border-blue-500 rounded-xl transition-all hover:bg-gray-750"
             >
-              <Upload size={18} className="text-gray-700" />
-              <span className="text-sm font-medium text-gray-700">Upload Plan</span>
+              <Upload size={16} className="text-gray-300" />
+              <span className="text-sm font-semibold text-gray-300">Upload</span>
             </button>
             
             <button
               onClick={() => jsonInputRef.current?.click()}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-300 hover:border-blue-500 rounded-lg transition-all shadow-sm hover:shadow-md"
+              className="h-10 flex items-center gap-2 px-4 bg-gray-800 border border-gray-700 hover:border-blue-500 rounded-xl transition-all hover:bg-gray-750"
             >
-              <FileJson size={18} className="text-gray-700" />
-              <span className="text-sm font-medium text-gray-700">Load Project</span>
+              <FileJson size={16} className="text-gray-300" />
+              <span className="text-sm font-semibold text-gray-300">Load</span>
             </button>
             
             <div className="relative group">
-              <button className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg font-medium">
-                <Download size={18} />
+              <button className="h-10 flex items-center gap-2 px-5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-500 hover:to-blue-600 transition-all shadow-lg hover:shadow-xl font-semibold">
+                <Download size={16} />
                 <span className="text-sm">Export</span>
               </button>
             <div className="absolute right-0 top-full mt-2 bg-white border rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 min-w-[160px]">
@@ -245,22 +239,19 @@ export default function Home() {
       </header>
 
       {/* Main content */}
-      <div className="flex-1 flex overflow-hidden gap-4 p-4">
-        {/* Left sidebar - Palette */}
-        <aside className="w-72 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 p-5 overflow-y-auto">
-          <DevicePalette />
-        </aside>
-
+      <div className="flex-1 flex overflow-hidden gap-3 p-3">
         {/* Center - Editor */}
         <main className="flex-1 overflow-hidden">
-          <div className="h-full bg-white rounded-2xl shadow-2xl border border-gray-200/50 overflow-hidden relative">
+          <div className="h-full bg-gray-100 rounded-xl shadow-2xl border border-gray-700/30 overflow-hidden relative">
             <Editor />
           </div>
         </main>
-
-        {/* Right sidebar - Properties */}
-        <aside className="w-72 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 p-5 overflow-y-auto">
-          <PropertyPanel />
+        
+        {/* Right - Legend */}
+        <aside className="w-80 flex-shrink-0">
+          <div className="h-full overflow-y-auto">
+            <Legend />
+          </div>
         </aside>
       </div>
 

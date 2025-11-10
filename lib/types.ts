@@ -8,7 +8,7 @@ export const NodeDataSchema = z.object({
   circuitId: z.string().optional(),
   heightMm: z.number().optional(),
   notes: z.string().optional(),
-  switchType: z.enum(['1g', '2g', '3g', 'dimmer']).optional(), // for switches
+  switchType: z.enum(['1g', '2g', '3g', '4g', 'dimmer']).optional(), // for switches
   powerType: z.enum(['single', 'double']).optional(), // for power points
   lightType: z.enum(['ceiling', 'wall']).optional(), // for lights
 });

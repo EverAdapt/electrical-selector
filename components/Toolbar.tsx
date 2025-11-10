@@ -26,29 +26,32 @@ export function Toolbar() {
   };
 
   return (
-    <div className="absolute top-6 right-6 flex flex-col gap-2 bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 p-3">
+    <div className="absolute bottom-6 left-6 flex flex-col gap-1.5 bg-gray-900/95 backdrop-blur-sm rounded-xl shadow-2xl border border-gray-700/50 p-2">
       <button
         onClick={zoomIn}
-        className="p-2.5 hover:bg-blue-50 rounded-xl transition-all hover:shadow-md group"
+        className="p-2.5 hover:bg-gray-800 rounded-lg transition-all group"
         title="Zoom In"
       >
-        <ZoomIn size={20} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
+        <ZoomIn size={18} className="text-gray-300 group-hover:text-blue-400 transition-colors" />
       </button>
+      <div className="h-px bg-gray-700" />
       <button
         onClick={zoomOut}
-        className="p-2.5 hover:bg-blue-50 rounded-xl transition-all hover:shadow-md group"
+        className="p-2.5 hover:bg-gray-800 rounded-lg transition-all group"
         title="Zoom Out"
       >
-        <ZoomOut size={20} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
+        <ZoomOut size={18} className="text-gray-300 group-hover:text-blue-400 transition-colors" />
       </button>
+      <div className="h-px bg-gray-700" />
       <button
         onClick={fitToView}
-        className="p-2.5 hover:bg-blue-50 rounded-xl transition-all hover:shadow-md group"
+        className="p-2.5 hover:bg-gray-800 rounded-lg transition-all group"
         title="Fit to View"
       >
-        <Maximize2 size={20} className="text-gray-700 group-hover:text-blue-600 transition-colors" />
+        <Maximize2 size={18} className="text-gray-300 group-hover:text-blue-400 transition-colors" />
       </button>
-      <div className="px-3 py-2 text-xs font-bold text-blue-900 text-center border-t border-gray-200 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg mt-1">
+      <div className="h-px bg-gray-700" />
+      <div className="px-3 py-1.5 text-xs font-semibold text-blue-400 text-center bg-gray-800/50 rounded-md">
         {(viewport.zoom * 100).toFixed(0)}%
       </div>
     </div>

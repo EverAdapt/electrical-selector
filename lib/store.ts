@@ -28,9 +28,17 @@ interface FloorplanState {
   setMeta: (meta: Partial<Meta>) => void;
   
   // Actions - Nodes
-  addNode: (node: Omit<DeviceNode, 'id'>) => void;
+  addNode: (node: Omit<DeviceNode, 'id'>) => string;
   updateNode: (id: string, updates: Partial<DeviceNode>) => void;
   deleteNode: (id: string) => void;
+  
+  // Batch operations
+  batchUpdate: (updates: {
+    nodesToAdd?: Omit<DeviceNode, 'id'>[];
+    nodesToDelete?: string[];
+    edgesToAdd?: Omit<Edge, 'id'>[];
+    edgesToDelete?: string[];
+  }) => void;
   
   // Actions - Edges
   addEdge: (edge: Omit<Edge, 'id'>) => void;
@@ -96,6 +104,7 @@ export const useFloorplanStore = create<FloorplanState>()(
         selectedNodeId: id,
       }));
       get().pushHistory();
+      return id;
     },
     
     updateNode: (id, updates) => {
@@ -137,6 +146,51 @@ export const useFloorplanStore = create<FloorplanState>()(
         edges: state.edges.filter((e) => e.id !== id),
         selectedEdgeId: state.selectedEdgeId === id ? null : state.selectedEdgeId,
       }));
+      get().pushHistory();
+    },
+    
+    // Batch update - atomic operation for multiple changes
+    batchUpdate: (updates) => {
+      set((state) => {
+        let newNodes = [...state.nodes];
+        let newEdges = [...state.edges];
+        
+        // Add new nodes
+        if (updates.nodesToAdd) {
+          const addedNodes = updates.nodesToAdd.map(node => {
+            // Allow passing nodes with ID (for precise control)
+            const nodeWithId = node as any;
+            const id = nodeWithId.id || crypto.randomUUID();
+            return { ...node, id } as DeviceNode;
+          });
+          newNodes = [...newNodes, ...addedNodes];
+        }
+        
+        // Delete nodes (and their edges)
+        if (updates.nodesToDelete) {
+          newNodes = newNodes.filter(n => !updates.nodesToDelete!.includes(n.id));
+          newEdges = newEdges.filter(e => 
+            !updates.nodesToDelete!.includes(e.source) && 
+            !updates.nodesToDelete!.includes(e.target)
+          );
+        }
+        
+        // Add new edges
+        if (updates.edgesToAdd) {
+          const addedEdges = updates.edgesToAdd.map(edge => ({
+            ...edge,
+            id: crypto.randomUUID(),
+          } as Edge));
+          newEdges = [...newEdges, ...addedEdges];
+        }
+        
+        // Delete edges
+        if (updates.edgesToDelete) {
+          newEdges = newEdges.filter(e => !updates.edgesToDelete!.includes(e.id));
+        }
+        
+        return { nodes: newNodes, edges: newEdges };
+      });
       get().pushHistory();
     },
     

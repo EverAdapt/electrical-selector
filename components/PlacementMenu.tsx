@@ -2,6 +2,8 @@
 
 import React from 'react';
 import { DeviceKind } from '@/lib/types';
+import { Dock, DockIcon, DockItem, DockLabel } from '@/components/ui/dock';
+import { Lightbulb, ToggleLeft, Plug } from 'lucide-react';
 
 interface PlacementMenuProps {
   position: { x: number; y: number };
@@ -37,62 +39,57 @@ export function PlacementMenu({ position, isNearWall, onSelect, onClose }: Place
     return () => document.removeEventListener('keydown', handleEscape);
   }, [onClose]);
 
+  const items = [
+    {
+      title: 'Light Point',
+      icon: <Lightbulb className="h-full w-full text-yellow-500" />,
+      kind: 'light' as DeviceKind,
+      show: true,
+    },
+    {
+      title: 'Light Switch',
+      icon: <ToggleLeft className="h-full w-full text-blue-500" />,
+      kind: 'switch' as DeviceKind,
+      show: isNearWall,
+    },
+    {
+      title: 'Power Point',
+      icon: <Plug className="h-full w-full text-green-500" />,
+      kind: 'power' as DeviceKind,
+      show: isNearWall,
+    },
+  ].filter(item => item.show);
+
   return (
     <div
       ref={menuRef}
-      className="absolute bg-white rounded-lg shadow-2xl border-2 border-blue-500 p-2 z-50"
+      className="fixed z-50"
       style={{
-        left: position.x,
-        top: position.y,
-        minWidth: '180px',
+        left: Math.max(20, Math.min(position.x - 120, window.innerWidth - 280)),
+        top: Math.max(20, position.y - 50),
       }}
     >
-      <div className="text-xs font-semibold text-gray-500 mb-2 px-2">
-        {isNearWall ? 'Near Wall' : 'Open Space'}
-      </div>
-      
-      <div className="space-y-1">
-        <button
-          onClick={() => onSelect('light')}
-          className="w-full text-left px-3 py-2 rounded hover:bg-blue-50 flex items-center gap-2 transition-colors"
-        >
-          <span className="text-2xl">💡</span>
-          <div>
-            <div className="font-semibold text-sm">Light Point</div>
-            <div className="text-xs text-gray-500">Auto-creates switch</div>
+      <Dock 
+        magnification={64}
+        distance={100}
+      >
+        {items.map((item, idx) => (
+          <div
+            key={idx}
+            onClick={() => {
+              onSelect(item.kind);
+              onClose();
+            }}
+          >
+            <DockItem className="rounded-full bg-gray-800 hover:bg-gray-700 cursor-pointer transition-all duration-150 shadow-xl border-2 border-gray-600/50 hover:border-blue-500/50">
+              <DockLabel className="bg-gray-900/95 backdrop-blur-sm border-blue-500/50 text-white font-semibold shadow-xl">
+                {item.title}
+              </DockLabel>
+              <DockIcon className="text-white">{item.icon}</DockIcon>
+            </DockItem>
           </div>
-        </button>
-
-        {isNearWall && (
-          <>
-            <button
-              onClick={() => onSelect('switch')}
-              className="w-full text-left px-3 py-2 rounded hover:bg-blue-50 flex items-center gap-2 transition-colors"
-            >
-              <span className="text-2xl">🔘</span>
-              <div>
-                <div className="font-semibold text-sm">Light Switch</div>
-                <div className="text-xs text-gray-500">Auto-creates light</div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => onSelect('power')}
-              className="w-full text-left px-3 py-2 rounded hover:bg-blue-50 flex items-center gap-2 transition-colors"
-            >
-              <span className="text-2xl">🔌</span>
-              <div>
-                <div className="font-semibold text-sm">Power Point</div>
-                <div className="text-xs text-gray-500">Wall outlet</div>
-              </div>
-            </button>
-          </>
-        )}
-      </div>
-
-      <div className="text-xs text-gray-400 mt-2 px-2 border-t pt-2">
-        Click an option or press Esc to cancel
-      </div>
+        ))}
+      </Dock>
     </div>
   );
 }

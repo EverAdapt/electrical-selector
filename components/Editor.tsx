@@ -24,6 +24,7 @@ export function Editor({ width = 1200, height = 800 }: EditorProps) {
   const [tooltipNodeId, setTooltipNodeId] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
   const [placementMenu, setPlacementMenu] = useState<{ x: number; y: number; isNearWall: boolean; svgCoords: { x: number; y: number } } | null>(null);
+  const [alignmentGuides, setAlignmentGuides] = useState<{ x?: number; y?: number } | null>(null);
   
   const viewport = useFloorplanStore((s) => s.viewport);
   const setViewport = useFloorplanStore((s) => s.setViewport);
@@ -251,7 +252,7 @@ export function Editor({ width = 1200, height = 800 }: EditorProps) {
   };
 
   return (
-    <div className="relative w-full h-full bg-gradient-to-br from-slate-50 to-gray-100 overflow-hidden">
+    <div className="relative w-full h-full bg-white overflow-hidden">
       <svg
         id="editor-svg"
         ref={svgRef}
@@ -263,8 +264,8 @@ export function Editor({ width = 1200, height = 800 }: EditorProps) {
         onMouseUp={handleMouseUp}
         onWheel={handleWheel}
         onClick={handleClick}
-        className="cursor-grab active:cursor-grabbing"
-        style={{ cursor: isPanning ? 'grabbing' : mode === 'select' ? 'grab' : 'crosshair' }}
+        className="cursor-crosshair"
+        style={{ cursor: isPanning ? 'grabbing' : 'crosshair' }}
       >
         {/* Background layer */}
         <g id="background">
@@ -310,6 +311,38 @@ export function Editor({ width = 1200, height = 800 }: EditorProps) {
           ))}
         </g>
 
+        {/* Alignment guides */}
+        {alignmentGuides && (
+          <g id="alignment-guides">
+            {alignmentGuides.x !== undefined && (
+              <line
+                x1={alignmentGuides.x}
+                y1={0}
+                x2={alignmentGuides.x}
+                y2={height}
+                stroke="#10b981"
+                strokeWidth={1}
+                strokeDasharray="6 4"
+                opacity={0.6}
+                style={{ pointerEvents: 'none' }}
+              />
+            )}
+            {alignmentGuides.y !== undefined && (
+              <line
+                x1={0}
+                y1={alignmentGuides.y}
+                x2={width}
+                y2={alignmentGuides.y}
+                stroke="#10b981"
+                strokeWidth={1}
+                strokeDasharray="6 4"
+                opacity={0.6}
+                style={{ pointerEvents: 'none' }}
+              />
+            )}
+          </g>
+        )}
+
         {/* Devices layer */}
         <g id="devices">
           {nodes.map((node) => (
@@ -322,6 +355,7 @@ export function Editor({ width = 1200, height = 800 }: EditorProps) {
                 setTooltipNodeId(nodeId);
                 setTooltipPosition(pos);
               }}
+              onAlignmentGuides={setAlignmentGuides}
             />
           ))}
         </g>

@@ -128,6 +128,7 @@ export function DeviceTooltip({ node, position, onClose }: DeviceTooltipProps) {
               <option value="1g">1 Gang</option>
               <option value="2g">2 Gang</option>
               <option value="3g">3 Gang</option>
+              <option value="4g">4 Gang</option>
               <option value="dimmer">Dimmer</option>
             </select>
           </div>

@@ -33,6 +33,7 @@ export const EdgeSchema = z.object({
   data: z.object({
     label: z.string().optional(),
     points: z.array(z.object({ x: z.number(), y: z.number() })).optional(),
+    controlPoint: z.object({ x: z.number(), y: z.number() }).optional(), // For curved lines
   }).optional(),
 });
 

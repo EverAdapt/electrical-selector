@@ -9,6 +9,7 @@ import { DraggableDevice } from './DraggableDevice';
 import { Wire } from './Wire';
 import { Toolbar } from './Toolbar';
 import { DeviceTooltip } from './DeviceTooltip';
+import { PlacementMenu } from './PlacementMenu';
 import { snapToWalls } from '@/lib/snap';
 
 interface EditorProps {
@@ -21,7 +22,8 @@ export function Editor({ width = 1200, height = 800 }: EditorProps) {
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [tooltipNodeId, setTooltipNodeId] = useState<string | null>(null);
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
+  const [placementMenu, setPlacementMenu] = useState<{ x: number; y: number; isNearWall: boolean; svgCoords: { x: number; y: number } } | null>(null);
   
   const viewport = useFloorplanStore((s) => s.viewport);
   const setViewport = useFloorplanStore((s) => s.setViewport);
@@ -79,15 +81,19 @@ export function Editor({ width = 1200, height = 800 }: EditorProps) {
     setViewport({ zoom: newZoom });
   };
 
-  // Click to add device
+  // Click to show placement menu
   const handleClick = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!svgRef.current) return;
     
-    // Don't handle click if it's on a device (let device handle it)
+    // Don't handle click if it's on a device or wire (let them handle it)
     const target = e.target as SVGElement;
-    if (target.closest('#devices g[transform]')) {
-      return; // Let the device handle its own click/drag
+    if (target.closest('#devices g[transform]') || target.closest('#wires')) {
+      return; // Let the device/wire handle its own interaction
     }
+    
+    // Close any existing menu or tooltip
+    setPlacementMenu(null);
+    setTooltipNodeId(null);
     
     const svg = svgRef.current;
     const pt = svg.createSVGPoint();
@@ -98,29 +104,37 @@ export function Editor({ width = 1200, height = 800 }: EditorProps) {
     
     let { x, y } = pt.matrixTransform(ctm.inverse());
     
-    // If in select mode, just deselect
-    if (mode === 'select') {
-      setTooltipNodeId(null);
-      selectNode(null);
-      return;
-    }
+    // Check if near a wall
+    const wallSnap = snapToWalls(wallIndex, x, y, 150);
+    const isNearWall = wallSnap !== null;
     
+    // Show placement menu at click position
+    setPlacementMenu({
+      x: e.clientX,
+      y: e.clientY,
+      isNearWall,
+      svgCoords: { x, y }
+    });
+  };
+
+  // Handle placement after menu selection
+  const handlePlacement = (kind: 'power' | 'light' | 'switch') => {
+    if (!placementMenu) return;
+    
+    let { x, y } = placementMenu.svgCoords;
     let rotation = 0;
     
-    let kind: 'power' | 'light' | 'switch' = 'power';
-    if (mode === 'add-light') kind = 'light';
-    else if (mode === 'add-switch') kind = 'switch';
+    // Close the menu
+    setPlacementMenu(null);
     
     // Enforce wall snapping for power points and switches with large tolerance
     if (kind === 'power' || kind === 'switch') {
-      const snap = snapToWalls(wallIndex, x, y, 200); // Large tolerance - always finds a wall in a room
+      const snap = snapToWalls(wallIndex, x, y, 200);
       if (snap) {
         x = snap.x;
         y = snap.y;
         rotation = (snap.angle * 180) / Math.PI;
-      }
-      // If still no snap, try with even larger tolerance
-      else {
+      } else {
         const largeSnap = snapToWalls(wallIndex, x, y, 500);
         if (largeSnap) {
           x = largeSnap.x;
@@ -129,7 +143,6 @@ export function Editor({ width = 1200, height = 800 }: EditorProps) {
         }
       }
     }
-    
     // Try to snap lights too (but not enforced)
     else {
       const snap = snapToWalls(wallIndex, x, y, 15);
@@ -150,14 +163,17 @@ export function Editor({ width = 1200, height = 800 }: EditorProps) {
     
     // Get the ID of the just-created node (it's the last one added)
     setTimeout(() => {
-      const createdNode = nodes[nodes.length - 1];
-      if (!createdNode) return;
+      const currentNodes = useFloorplanStore.getState().nodes;
+      const createdNode = currentNodes[currentNodes.length - 1];
+      if (!createdNode) {
+        return;
+      }
       
       const nodeId = createdNode.id;
       
-      // Auto-create switch for lights
+      // Auto-create companion device
       if (kind === 'light') {
-        // Place switch 100px to the right and snap to wall with large tolerance
+        // Auto-create switch for lights
         let switchX = x + 100;
         let switchY = y;
         let switchRotation = 0;
@@ -168,7 +184,6 @@ export function Editor({ width = 1200, height = 800 }: EditorProps) {
           switchY = switchSnap.y;
           switchRotation = (switchSnap.angle * 180) / Math.PI;
         } else {
-          // Try even larger tolerance
           const largeSnap = snapToWalls(wallIndex, switchX, switchY, 500);
           if (largeSnap) {
             switchX = largeSnap.x;
@@ -184,15 +199,37 @@ export function Editor({ width = 1200, height = 800 }: EditorProps) {
           data: { switchType: '1g' },
         });
         
-        // Get switch ID after it's created
         setTimeout(() => {
-          const switchNode = nodes[nodes.length - 1];
+          const currentNodes = useFloorplanStore.getState().nodes;
+          const switchNode = currentNodes[currentNodes.length - 1];
           if (!switchNode) return;
           
-          // Create edge connecting light and switch
           addEdge({
             source: nodeId,
             target: switchNode.id,
+            data: {},
+          });
+        }, 0);
+      } else if (kind === 'switch') {
+        // Auto-create light for switches
+        let lightX = x - 100;
+        let lightY = y - 50;
+        
+        addNode({
+          kind: 'light',
+          position: { x: lightX, y: lightY },
+          rotation: 0,
+          data: { lightType: 'ceiling' },
+        });
+        
+        setTimeout(() => {
+          const currentNodes = useFloorplanStore.getState().nodes;
+          const lightNode = currentNodes[currentNodes.length - 1];
+          if (!lightNode) return;
+          
+          addEdge({
+            source: nodeId,
+            target: lightNode.id,
             data: {},
           });
         }, 0);
@@ -200,7 +237,7 @@ export function Editor({ width = 1200, height = 800 }: EditorProps) {
       
       // Show tooltip for the created device
       setTooltipNodeId(nodeId);
-      setTooltipPosition({ x: e.clientX, y: e.clientY });
+      setTooltipPosition(placementMenu ? { x: placementMenu.x, y: placementMenu.y } : null);
       selectNode(nodeId);
     }, 0);
   };
@@ -293,8 +330,18 @@ export function Editor({ width = 1200, height = 800 }: EditorProps) {
       {/* Toolbar overlay */}
       <Toolbar />
       
+      {/* Placement Menu */}
+      {placementMenu && (
+        <PlacementMenu
+          position={{ x: placementMenu.x, y: placementMenu.y }}
+          isNearWall={placementMenu.isNearWall}
+          onSelect={handlePlacement}
+          onClose={() => setPlacementMenu(null)}
+        />
+      )}
+      
       {/* Device Tooltip */}
-      {tooltipNodeId && (() => {
+      {tooltipNodeId && tooltipPosition && (() => {
         const node = nodes.find(n => n.id === tooltipNodeId);
         return node ? (
           <DeviceTooltip
